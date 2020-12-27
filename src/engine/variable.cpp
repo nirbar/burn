@@ -53,7 +53,7 @@ static HRESULT FormatString(
     __in BURN_VARIABLES* pVariables,
     __in_z LPCWSTR wzIn,
     __out_z_opt LPWSTR* psczOut,
-    __out_opt DWORD* pcchOut,
+    __out_opt SIZE_T* pcchOut,
     __in BOOL fObfuscateHiddenVariables,
     __out BOOL* pfContainsHiddenVariable
     );
@@ -157,10 +157,6 @@ static HRESULT InitializeVariableNumeric(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
     );
-static HRESULT InitializeVariableRegistryFolder(
-    __in DWORD_PTR dwpData,
-    __inout BURN_VARIANT* pValue
-    );
 static HRESULT InitializeVariable6432Folder(
         __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
@@ -189,6 +185,13 @@ static HRESULT Get64bitFolderFromRegistry(
     __in int nFolder,
     __deref_out_z LPWSTR* psczPath
     );
+
+#if !defined(_WIN64)
+static HRESULT InitializeVariableRegistryFolder(
+    __in DWORD_PTR dwpData,
+    __inout BURN_VARIANT* pValue
+);
+#endif
 
 
 // function definitions
@@ -704,7 +707,7 @@ extern "C" HRESULT VariableFormatString(
     __in BURN_VARIABLES* pVariables,
     __in_z LPCWSTR wzIn,
     __out_z_opt LPWSTR* psczOut,
-    __out_opt DWORD* pcchOut
+    __out_opt SIZE_T* pcchOut
     )
 {
     return FormatString(pVariables, wzIn, psczOut, pcchOut, FALSE, NULL);
@@ -714,7 +717,7 @@ extern "C" HRESULT VariableFormatStringObfuscated(
     __in BURN_VARIABLES* pVariables,
     __in_z LPCWSTR wzIn,
     __out_z_opt LPWSTR* psczOut,
-    __out_opt DWORD* pcchOut
+    __out_opt SIZE_T* pcchOut
     )
 {
     return FormatString(pVariables, wzIn, psczOut, pcchOut, TRUE, NULL);
@@ -1085,7 +1088,7 @@ static HRESULT FormatString(
     __in BURN_VARIABLES* pVariables,
     __in_z LPCWSTR wzIn,
     __out_z_opt LPWSTR* psczOut,
-    __out_opt DWORD* pcchOut,
+    __out_opt SIZE_T* pcchOut,
     __in BOOL fObfuscateHiddenVariables,
     __out BOOL* pfContainsHiddenVariable
     )
@@ -1133,7 +1136,7 @@ static HRESULT FormatString(
             ExitOnFailure(hr, "Failed to append string.");
             break;
         }
-        cch = wzClose - wzOpen - 1;
+        cch = (DWORD)(wzClose - wzOpen - 1);
 
         if (0 == cch)
         {
@@ -2170,6 +2173,7 @@ LExit:
     return hr;
 }
 
+#if !defined(_WIN64)
 static HRESULT InitializeVariableRegistryFolder(
     __in DWORD_PTR dwpData,
     __inout BURN_VARIANT* pValue
@@ -2201,6 +2205,7 @@ LExit:
 
     return hr;
 }
+#endif
 
 static HRESULT InitializeVariable6432Folder(
         __in DWORD_PTR dwpData,
